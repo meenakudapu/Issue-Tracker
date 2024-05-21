@@ -3,11 +3,14 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
 
-//const UserModel = require('./Model/UserModel');
 
 const IssueModel = require('./Model/IssueModel');
-//const userController = require('./Controller/UserController');
 const issueController = require('./Controller/IssueController');
+
+
+const StatusModel = require('./Model/StatusModel');
+const statusController = require('./Controller/StatusController');
+
 
 const app = express();
 app.use(express.urlencoded({extended:true}))
@@ -23,14 +26,10 @@ db.once('open', () => {
     console.log('Connected to MongoDB');
 });
 
-
-
-
-// app.get('/api/users', userController.getUsers);
-// app.get('/api/users/:userId', userController.userDataById);
-// app.post('/api/users', userController.userSave);
-// app.put('/api/users/:userId', userController.userEditSave);
-// app.delete('/api/users/:userId', userController.userDelete);
+app.post('/admin/mapIssue/:issueId',statusController.mapIssue)
+app.get('/admin/openStatus',statusController.showOpenStatus);
+app.get('/admin/closedStatus',statusController.showClosedStatus);
+app.put('/status/:issueId',statusController.updateStatus)
 
 
 app.get('/api/issues', issueController.getHomeIssues);
