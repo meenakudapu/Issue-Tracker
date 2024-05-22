@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const internal = require('stream');
 
-// Define the schema for the issue
 const issueSchema = new mongoose.Schema({
     issueId: { type:String, required: true,unique: true },
     imageUrl: { type: String },
@@ -15,7 +14,8 @@ const issueSchema = new mongoose.Schema({
         required: true,
         ref:'StatusModel',
         enum: ['open', 'closed'] 
-    }
+    },
+    connectedTo:{ type: String, ref: 'EmployeeModel' }
 });
 
 

@@ -22,10 +22,6 @@ exports.mapIssue = async (req, res) => {
         res.status(500).send('Failed to map issue with status');
     }
 };
-
-
-
-
 exports.showOpenStatus = async (req, res) => {
     try {
         const openStatus = await StatusModel.find({ status: 'open' });
