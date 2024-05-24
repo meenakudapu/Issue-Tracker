@@ -3,6 +3,8 @@ const statusModel = require('../Model/StatusModel');
 const { v4: uuidv4 } = require('uuid');
 const MappingModel = require('../Model/MappingModel');
 const EmployeeModel = require('../Model/EmployeeModel');
+const Organization=require('../Model/OrganizationModel')
+const Service=require('../Model/ServiceModel')
 async function getHomeIssues(req, res) {
     try {
         const issues = await issueModel.find();
@@ -45,43 +47,62 @@ async function IssueDelete(req, res) {
 }
 
 
+
 async function IssueSave(req, res) {
     try {
-        const {  imageUrl, issueName, issueDesc, createdOn, createdBy, connectedBy, status } = req.body;
+        const { imageUrl, issueName, issueDesc, createdOn, createdBy, connectedBy, status ,issueOrgId, issueServiceId } = req.body;
 
-       
+        // Generate a unique statusId
+        const statusId = 3000 + (await statusModel.countDocuments()) + 1;
 
-        if (status !== 'open' && status !== 'closed') {
-            return res.status(400).send('Status must be either "open" or "closed"');
-        }
-
-        
-        const statusId = uuidv4();
-        const documentCount = await issueModel.countDocuments();
-        const employee = await EmployeeModel.findOne({ taskCount: { $lt: 6 } });
+        // Find an employee with less than 4 tasks
+        const employee = await EmployeeModel.findOne({ taskCount: { $lt: 6 } ,empOrgId:issueOrgId,empServiceId:issueServiceId});
         if (!employee) {
-            return res.status(400).send('No available employee with less than 4 tasks');
+            return res.status(400).send('No available employee with less than 6 tasks');
         }
-        
-        
-        const newIssueId = 5000 + documentCount + 1;
-        await MappingModel.create({ issueId:newIssueId , statusId, status });
 
+        // Create a new issue document
+        const newIssueId =5000 + (await issueModel.countDocuments()) + 1;
         const issue = await issueModel.create({
-            issueId:newIssueId ,
+            issueId: newIssueId,
             imageUrl,
             issueName,
             issueDesc,
             createdOn,
             createdBy,
             connectedBy,
-            connectedTo: employee.employeeId,
+            connectedTo: employee.empId,
+            status: 'notopened', 
+            issueStatusId: statusId,
+            issueOrgId: issueOrgId, 
+            issueServiceId: issueServiceId
+
+        });
+
+        const organization = await Organization.findOne({ orgId: issueOrgId });
+        if (organization) {
+            organization.orgIssueId.push(newIssueId);
+            await organization.save();
+        
+        }
+        const service = await Service.findOne({ sId:issueServiceId});
+        if (service) {
+            service.sIssueIds.push(newIssueId);
+            await service.save();
+        
+        }
+        await statusModel.create({
+            issueId: newIssueId,
+            statusId,
             status
         });
+
+       
         await EmployeeModel.updateOne(
-            { employeeId: employee.employeeId },
-            { $inc: { taskCount: 1 } }
+            { empId: employee.empId },
+            { $push: { empIssueId: newIssueId }, $inc: { taskCount: 1 } }
         );
+
         res.status(201).json(issue);
     } catch (err) {
         console.error(err);

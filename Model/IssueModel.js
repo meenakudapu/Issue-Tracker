@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { type } = require('os');
 const internal = require('stream');
 
 const issueSchema = new mongoose.Schema({
@@ -7,15 +8,12 @@ const issueSchema = new mongoose.Schema({
     issueName: { type: String, required: true },
     issueDesc: { type: String },
     createdOn: { type: Date, default: Date.now },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'UserModel' },
-    connectedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'UserModel' },
-    status: { 
-        type: String, 
-        required: true,
-        ref:'StatusModel',
-        enum: ['open', 'closed'] 
-    },
-    connectedTo:{ type: String, ref: 'EmployeeModel' }
+    createdBy: {type:String},
+    status: {type: String}, 
+    connectedTo:{ type: String},
+    issueStatusId:{type:String},
+    issueServiceId:{type:String},
+    issueOrgId:{type:String}
 });
 
 

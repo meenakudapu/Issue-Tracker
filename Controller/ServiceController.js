@@ -1,71 +1,84 @@
 const mongoose = require('mongoose');
-const fs = require('fs');
-const path = require('path');
-const Service = require('../Model/ServiceModel'); // Adjust the path as needed
+const Service = require('../Model/ServiceModel');
+const Organization = require('../Model/OrganizationModel');
+const mongoURI = 'mongodb://localhost:27017/issue_tracker';
 
-// MongoDB connection URI
-const mongoURI = 'mongodb://localhost:27017/issue_tracker'; 
-
-// Connect to MongoDB
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(async () => {
-        console.log('MongoDB connected');
-
-        try {
-            // Data to insert into the services collection
-            const services = [
-                { 
-                    "s_id": "s001", 
-                    "s_email": "service1@example.com", 
-                    "s_phno": "1234567890", 
-                    "s_org_id": "org001",
-                    "s_emp_ids": ["emp001", "emp002"],
-                    // "s_issue_ids": ["issue001", "issue002"]
-                },
-                { 
-                    "s_id": "s002", 
-                    "s_email": "service2@example.com", 
-                    "s_phno": "9876543210", 
-                    "s_org_id": "org002",
-                    "s_emp_ids": ["emp003", "emp004"],
-                    // "s_issue_ids": ["issue003", "issue004"]
-                },
-                { 
-                    "s_id": "s003", 
-                    "s_email": "service3@example.com", 
-                    "s_phno": "988887877", 
-                    "s_org_id": "org003",
-                    "s_emp_ids": ["emp005", "emp006"],
-                    // "s_issue_ids": ["issue003", "issue004"]
-                },
-                { 
-                    "s_id": "s004", 
-                    "s_email": "service4@example.com", 
-                    "s_phno": "9999999999", 
-                    "s_org_id": "org004",
-                    "s_emp_ids": ["emp007", "emp008"],
-                    // "s_issue_ids": ["issue003", "issue004"]
-                },
-                { 
-                    "s_id": "s005", 
-                    "s_email": "service4@example.com", 
-                    "s_phno": "9999999999", 
-                    "s_org_id": "org004",
-                    "s_emp_ids": ["emp007", "emp008"],
-                    // "s_issue_ids": ["issue003", "issue004"]
-                }
-            ];
-
-            // Insert the services into the MongoDB collection
-            await Service.insertMany(services);
-            console.log('Services inserted');
-        } catch (err) {
-            console.error('Error inserting services:', err);
-        } finally {
-            // Disconnect from MongoDB after insertion
-            mongoose.disconnect();
+async function addService(req, res) {
+    try {
+        const documentCount = await Service.countDocuments();
+        const sid =200+documentCount+1;
+        const {  sEmail, sPhno, sOrgId } = req.body;
+        const service = await Service.create({
+            sId:sid,
+            sEmail,
+            sPhno,
+            sOrgId
+        });
+        const organizations = await Organization.find();
+        for (const organization of organizations) {
+            if (sOrgId === organization.orgId) {
+                organization.serviceIds.push(service.sId);
+                await organization.save(); 
+                break; 
+            }
         }
-    })
-    .catch(err => {
-        console.error('Error connecting to MongoDB:', err);
-    });
+        
+
+        //await organizations.save();
+        res.status(201).json(service);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error occurred while creating service');
+    }
+}
+
+async function getServices(req, res) {
+    try {
+        const services = await Service.find();
+        res.status(200).json(services);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server failed to fetch services");
+    }
+}
+
+async function deleteService(req, res) {
+    try {
+        const { sId } = req.params;
+        const service = await Service.deleteOne({ sId });
+        if (service.deletedCount === 0) {
+            res.status(404).send(`Service with ID: ${sId} not found`);
+        } else {
+            res.status(200).json({ message: `Service with ID: ${sId} deleted successfully` });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error deleting the service");
+    }
+}
+
+async function editService(req, res) {
+    try {
+        const { sId } = req.params;
+        const updatedService = await Service.findOneAndUpdate(
+            { sId },
+            req.body,
+            { new: true }
+        );
+        if (!updatedService) {
+            res.status(404).send(`Service with ID: ${sId} not found`);
+        } else {
+            res.status(200).json(updatedService);
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error updating the service");
+    }
+}
+
+module.exports = {
+    addService,
+    getServices,
+    deleteService,
+    editService
+};
