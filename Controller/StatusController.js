@@ -3,25 +3,25 @@
 const StatusModel = require('../Model/StatusModel');
 const MappingModel = require('../Model/MappingModel');
 
-exports.mapIssue = async (req, res) => {
-    try {
-        const { issueId } = req.params;
-        const { statusDescription}=req.body;
+// exports.mapIssue = async (req, res) => {
+//     try {
+//         const { issueId } = req.params;
+//         const { statusDescription}=req.body;
        
-        const statusDoc = await MappingModel.findOne({ issueId });
+//         const statusDoc = await MappingModel.findOne({ issueId });
 
-        if (statusDoc) {
-            const { status, statusId } = statusDoc;
-            const mapping = await StatusModel.create({ issueId, status ,statusId,statusDescription });
-            res.status(201).json(mapping);
-        } else {
-            res.status(404).send(`Status not found for issue ID: ${issueId}`);
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Failed to map issue with status');
-    }
-};
+//         if (statusDoc) {
+//             const { status, statusId } = statusDoc;
+//             const mapping = await StatusModel.create({ issueId, status ,statusId,statusDescription });
+//             res.status(201).json(mapping);
+//         } else {
+//             res.status(404).send(`Status not found for issue ID: ${issueId}`);
+//         }
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send('Failed to map issue with status');
+//     }
+// };
 exports.showOpenStatus = async (req, res) => {
     try {
         const openStatus = await StatusModel.find({ status: 'open' });
@@ -29,6 +29,15 @@ exports.showOpenStatus = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('Failed to retrieve open status');
+    }
+};
+exports.getStatus = async (req, res) => {
+    try {
+        const Status = await StatusModel.find();
+        res.status(200).json(Status);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Failed to retrieve  statuses');
     }
 };
 

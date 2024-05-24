@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const servicesSchema = new mongoose.Schema({
-    s_id: { type: String, required: true },
-    s_email: { type: String },
-    s_phno: { type: String },
-    s_org_id: { type: String, required: true },
-    s_emp_ids: [{ type: String }], // Array of employee IDs associated with the service
-    s_issue_ids: [{ type: String }] // Array of issue IDs associated with the service
+    sId: { type: String, required: true },
+    sEmail: { type: String },
+    sPhno: { type: String },
+    sOrgId: { type: String, required: true },
+    sEmpIds: [{ type: String }], 
+    sIssueIds: [{ type: String }] 
 });
 
 const ServicesModel = mongoose.model('Services', servicesSchema);
